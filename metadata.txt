@@ -1,0 +1,8 @@
+[general]
+name=RaumRegionMensch plugin
+description=Management of triggers in PostGIS database to copy attributes based on spatial relation
+version=1.0
+qgisMinimumVersion=2.0
+author=Martin Dobias
+email=martin.dobias@lutraconsulting.co.uk
+icon=icon.png
