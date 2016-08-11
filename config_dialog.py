@@ -34,7 +34,7 @@ class ConfigDialog(BASE, WIDGET):
         self.setupUi(self)
 
         settings = QSettings()
-        #self.restoreGeometry(settings.value("/Plugins/RRM_Plugin/config_geometry"))  # TODO: fix
+        self.restoreGeometry(settings.value("/Plugins/RRM_Plugin/config_geometry", "", "QByteArray"))
 
         self.btnAdd.setIcon(QgsApplication.getThemeIcon("/symbologyAdd.svg"))
         self.btnEdit.setIcon(QgsApplication.getThemeIcon("/mActionToggleEditing.svg"))
@@ -48,7 +48,7 @@ class ConfigDialog(BASE, WIDGET):
         self.cboConnection.addItem("[select a PostGIS connection]")
         for name in pg_connections:
             self.cboConnection.addItem(name)
-        last_conn_name = settings.value("/Plugins/RRM_Plugin/last_conn_name", type=str)
+        last_conn_name = settings.value("/Plugins/RRM_Plugin/last_conn_name", "")
         if last_conn_name in pg_connections:
             self.cboConnection.setCurrentIndex(pg_connections.index(last_conn_name)+1)
 
@@ -62,11 +62,12 @@ class ConfigDialog(BASE, WIDGET):
 
         self.populate_triggers()
 
-    def closeEvent(self, e):
+    def hideEvent(self, e):
+        # using hideEvent() because closeEvent() was not called when "Close" button was clicked!
         settings = QSettings()
         settings.setValue("/Plugins/RRM_Plugin/config_geometry", self.saveGeometry())
-        # TODO: store last conn name
-        BASE.closeEvent(self, e)
+        settings.setValue("/Plugins/RRM_Plugin/last_conn_name", self.cboConnection.currentText())
+        BASE.hideEvent(self, e)
 
     def get_connection(self):
 
