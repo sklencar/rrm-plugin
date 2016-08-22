@@ -105,7 +105,9 @@ class SqlGenerator:
         DECLARE
         myrec RECORD;
             BEGIN
-                SELECT * INTO myrec FROM %(source_table)s src WHERE st_within(NEW.geom, src.geom);
+                -- using dwithin to account for numerical issues when dealing with linestrings
+                -- set to 1cm tolerance (assuming CRS in meters)
+                SELECT * INTO myrec FROM %(source_table)s src WHERE st_dwithin(NEW.geom, src.geom, 0.01);
                 IF NOT FOUND THEN
                   %(assignments_null)s
                 ELSE
