@@ -112,6 +112,16 @@ class ConfigDialog(BASE, WIDGET):
         if not dlg.exec_():
             return
 
+        sql_gen = self._trigger_dialog_to_sql_generator(dlg)
+        sql = sql_gen.create_sql()
+
+        cur = conn.cursor()
+        cur.execute("BEGIN;" + sql + "COMMIT;")
+
+        self.populate_triggers()
+
+    def _trigger_dialog_to_sql_generator(self, dlg):
+        """Populate and return SqlGenerator instance from trigger dialog"""
         sql_gen = SqlGenerator()
         sql_gen.source_table = dlg.cboSource.currentText()
         sql_gen.target_table = dlg.cboTarget.currentText()
@@ -127,19 +137,9 @@ class ConfigDialog(BASE, WIDGET):
             sql_gen.trg_fcn_id = max(trigger[0] for trigger in self.triggers) + 1
         else:
             sql_gen.trg_fcn_id = 1
-        sql = sql_gen.create_sql()
+        return sql_gen
 
-        cur = conn.cursor()
-        cur.execute("BEGIN;"+sql+"COMMIT;")
-
-        self.populate_triggers()
-
-    def edit_trigger(self):
-        # TODO
-        QMessageBox.information(self, "RRM", "Not implemented yet.")
-
-    def remove_trigger(self):
-
+    def _current_item_to_sql_generator(self):
         index = self.treeTriggers.selectionModel().currentIndex()
         if not index.isValid():
             return
@@ -149,6 +149,53 @@ class ConfigDialog(BASE, WIDGET):
         sql_gen.trg_fcn_id = trigger[0]
         sql_gen.source_table = trigger[1]
         sql_gen.target_table = trigger[2]
+        return sql_gen
+
+    def edit_trigger(self):
+
+        sql_gen = self._current_item_to_sql_generator()
+        if not sql_gen:
+            return
+
+        sql = sql_gen.load_trigger_sql()
+
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute(sql)
+        trigger_json_str = cur.fetchone()[0]
+        if trigger_json_str is None:
+            QMessageBox.critical(self, "Error", "Cannot fetch trigger's details.\n\nRemoving the trigger and adding it again will fix the problem.")
+            return
+
+        try:
+            sql_gen.parse_json(trigger_json_str)
+        except ValueError:
+            QMessageBox.critical(self, "Error", "Trigger's details are malformed.\n\nRemoving the trigger and adding it again will fix the problem.")
+            return
+
+        dlg = TriggerDialog(conn, sql_gen)
+        if not dlg.exec_():
+            return
+
+        cur = conn.cursor()
+
+        # remove the existing pair of triggers
+        sql_drop_old = sql_gen.drop_sql()
+        cur.execute("BEGIN;" + sql_drop_old + "COMMIT;")
+
+        # create new pair of triggers
+        sql_gen_new = self._trigger_dialog_to_sql_generator(dlg)
+        sql = sql_gen_new.create_sql()
+        cur.execute("BEGIN;" + sql + "COMMIT;")
+
+        self.populate_triggers()
+
+    def remove_trigger(self):
+
+        sql_gen = self._current_item_to_sql_generator()
+        if not sql_gen:
+            return
+
         sql = sql_gen.drop_sql()
 
         conn = self.get_connection()

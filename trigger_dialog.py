@@ -78,7 +78,7 @@ class MyDelegate(QStyledItemDelegate):
 
 
 class TriggerDialog(BASE, WIDGET):
-    def __init__(self, conn, parent=None):
+    def __init__(self, conn, sql_gen=None, parent=None):
         BASE.__init__(self, parent)
         self.setupUi(self)
         self.conn = conn    # psycopg2 connection to the DB
@@ -94,11 +94,33 @@ class TriggerDialog(BASE, WIDGET):
             self.cboSource.addItem(schema + "." + table)
             self.cboTarget.addItem(schema + "." + table)
 
+        if sql_gen is not None:
+            source_schema, source_table = sql_gen.source_table.split('.')
+            src_index = self.cboSource.findText(source_schema + "." + source_table)
+            self.cboSource.setCurrentIndex(src_index)
+
+            target_schema, target_table = sql_gen.target_table.split('.')
+            target_index = self.cboTarget.findText(target_schema + "." + target_table)
+            self.cboTarget.setCurrentIndex(target_index)
+
         self.cboSource.currentIndexChanged.connect(self.populate_source_attrs)
         self.cboTarget.currentIndexChanged.connect(self.populate_target_attrs)
 
         self.populate_source_attrs()
         self.populate_target_attrs()
+
+        if sql_gen is not None:
+            source_schema, source_table = sql_gen.source_table.split('.')
+            source_field_names = [ field[1] for field in get_table_fields(self.conn, source_schema, source_table) ]
+            for source_attr, target_attr in sql_gen.attr_map.iteritems():
+                try:
+                    source_field_index = source_field_names.index(source_attr)
+                except ValueError:
+                    continue  # source field not found - strange but can happen...
+                item = self.treeMapping.model().item(source_field_index, 0)
+                item.setCheckState(Qt.Checked)
+                item2 = self.treeMapping.model().item(source_field_index, 1)
+                item2.setText(target_attr)
 
     def populate_source_attrs(self):
 
