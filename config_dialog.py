@@ -52,10 +52,12 @@ class ConfigDialog(BASE, WIDGET):
         if last_conn_name in pg_connections:
             self.cboConnection.setCurrentIndex(pg_connections.index(last_conn_name)+1)
 
+        self.triggers = []
         self.model = QStandardItemModel()
         self.treeTriggers.setModel(self.model)
 
         self.cboConnection.currentIndexChanged.connect(self.populate_triggers)
+        self.cboSchema.currentIndexChanged.connect(self._update_triggers_model)
         self.btnAdd.clicked.connect(self.add_trigger)
         self.btnEdit.clicked.connect(self.edit_trigger)
         self.btnRemove.clicked.connect(self.remove_trigger)
@@ -75,14 +77,12 @@ class ConfigDialog(BASE, WIDGET):
         return connection_from_name(name)
 
     def enable_controls(self, enabled):
-        for w in [self.btnAdd, self.btnEdit, self.btnRemove]:
+        for w in [self.btnAdd, self.btnEdit, self.btnRemove, self.cboSchema]:
             w.setEnabled(enabled)
 
     def populate_triggers(self):
 
         self.triggers = []
-        self.model.clear()
-        self.model.setHorizontalHeaderLabels(["ID", "Source Table", "Target Table"])
 
         try:
             conn = self.get_connection()
@@ -94,10 +94,39 @@ class ConfigDialog(BASE, WIDGET):
 
         self.enable_controls(True)
 
+        # populate list of schemas (for filtering)
+        old_schema_filter = self.cboSchema.currentText()
+        self.cboSchema.blockSignals(True)
+        self.cboSchema.clear()
+        self.cboSchema.addItem("[all]")
+        c = conn.cursor()
+        c.execute("SELECT oid, nspname FROM pg_namespace WHERE nspname !~ '^pg_' AND nspname != 'information_schema'")
+        for row in c.fetchall():
+            self.cboSchema.addItem(row[1])
+        if self.cboSchema.findText(old_schema_filter) != -1:  # select previously used filter
+            self.cboSchema.setCurrentIndex(self.cboSchema.findText(old_schema_filter))
+        self.cboSchema.blockSignals(False)
+
         self.triggers = list_triggers(conn)
 
+        self._update_triggers_model()
+
+
+    def _update_triggers_model(self):
+
+        schema_filter = self.cboSchema.currentText() if self.cboSchema.currentIndex() > 0 else None
+        def _filter_accepts(table_name):
+            return schema_filter is None or table_name.startswith(schema_filter+".")
+
+        self.model.clear()
+        self.model.setHorizontalHeaderLabels(["ID", "Source Table", "Target Table"])
+        index = -1
         for trigger_id, source_table, target_table in self.triggers:
+            index += 1
+            if not _filter_accepts(source_table) and not _filter_accepts(target_table):
+                continue
             item_0 = QStandardItem(str(trigger_id))
+            item_0.setData(index)  # store index of the item in self.triggers (used in _current_item_to_generator)
             item_1 = QStandardItem(source_table)
             item_2 = QStandardItem(target_table)
             for i in [item_0, item_1, item_2]:
@@ -112,7 +141,8 @@ class ConfigDialog(BASE, WIDGET):
         if not dlg.exec_():
             return
 
-        sql_gen = self._trigger_dialog_to_sql_generator(dlg)
+        sql_gen = dlg.to_sql_generator()
+        sql_gen.trg_fcn_id = self._new_trigger_id()
         sql = sql_gen.create_sql()
 
         cur = conn.cursor()
@@ -120,31 +150,22 @@ class ConfigDialog(BASE, WIDGET):
 
         self.populate_triggers()
 
-    def _trigger_dialog_to_sql_generator(self, dlg):
-        """Populate and return SqlGenerator instance from trigger dialog"""
-        sql_gen = SqlGenerator()
-        sql_gen.source_table = dlg.cboSource.currentText()
-        sql_gen.target_table = dlg.cboTarget.currentText()
-        # mapping
-        sql_gen.attr_map = {}
-        for row in xrange(dlg.model.rowCount()):
-            if dlg.model.item(row, 0).checkState() == Qt.Checked:
-                source_attr = dlg.model.item(row, 0).text()
-                target_attr = dlg.model.item(row, 1).text()
-                sql_gen.attr_map[source_attr] = target_attr
+    def _new_trigger_id(self):
         # find new trigger ID
-        if len(self.triggers) != 0:
-            sql_gen.trg_fcn_id = max(trigger[0] for trigger in self.triggers) + 1
-        else:
-            sql_gen.trg_fcn_id = 1
-        return sql_gen
+        if len(self.triggers) == 0:
+            return 1
+
+        return max(trigger[0] for trigger in self.triggers) + 1
 
     def _current_item_to_sql_generator(self):
         index = self.treeTriggers.selectionModel().currentIndex()
         if not index.isValid():
             return
 
-        trigger = self.triggers[index.row()]
+        # because of the filtering by schema, index of the item may not be same as index in self.triggers
+        trigger_index = self.model.data(self.model.index(index.row(),0), Qt.UserRole+1)
+
+        trigger = self.triggers[trigger_index]
         sql_gen = SqlGenerator()
         sql_gen.trg_fcn_id = trigger[0]
         sql_gen.source_table = trigger[1]
@@ -184,7 +205,8 @@ class ConfigDialog(BASE, WIDGET):
         cur.execute("BEGIN;" + sql_drop_old + "COMMIT;")
 
         # create new pair of triggers
-        sql_gen_new = self._trigger_dialog_to_sql_generator(dlg)
+        sql_gen_new = dlg.to_sql_generator()
+        sql_gen_new.trg_fcn_id = self._new_trigger_id()
         sql = sql_gen_new.create_sql()
         cur.execute("BEGIN;" + sql + "COMMIT;")
 

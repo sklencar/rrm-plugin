@@ -16,6 +16,7 @@ from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from PyQt4 import uic
 
+from sql_generator import SqlGenerator
 
 this_dir = os.path.dirname(__file__)
 
@@ -83,6 +84,8 @@ class TriggerDialog(BASE, WIDGET):
         self.setupUi(self)
         self.conn = conn    # psycopg2 connection to the DB
 
+        self.buttonBox.accepted.connect(self.on_ok)
+
         self.model = QStandardItemModel()
         self.treeMapping.setModel(self.model)
         self.delegate = MyDelegate()
@@ -149,3 +152,44 @@ class TriggerDialog(BASE, WIDGET):
 
         fields = get_table_fields(self.conn, self.layers[index][0], self.layers[index][1])
         self.delegate.fields = [ field[1] for field in fields ]
+
+    def to_sql_generator(self):
+        """Populate and return SqlGenerator instance from trigger dialog"""
+        sql_gen = SqlGenerator()
+        sql_gen.source_table = self.cboSource.currentText()
+        sql_gen.target_table = self.cboTarget.currentText()
+        # mapping
+        sql_gen.attr_map = {}
+        for row in xrange(self.model.rowCount()):
+            if self.model.item(row, 0).checkState() == Qt.Checked:
+                source_attr = self.model.item(row, 0).text()
+                target_attr = self.model.item(row, 1).text()
+                sql_gen.attr_map[source_attr] = target_attr
+        return sql_gen
+
+    def on_ok(self):
+        """ Do some sanity checks before accepting the dialog """
+
+        if self.cboSource.currentText() == self.cboTarget.currentText():
+            QMessageBox.warning(self, "Warning", "Source and target tables must be different.")
+            return
+
+        # at least one attribute must be checked
+        has_checked_item = False
+        has_chosen_target_attrs = True
+        for row in xrange(self.model.rowCount()):
+            if self.model.item(row, 0).checkState() == Qt.Checked:
+                has_checked_item = True
+
+                if self.model.item(row, 1).text() == "[none]":
+                    has_chosen_target_attrs = False
+
+        if not has_checked_item:
+            QMessageBox.warning(self, "Warning", "At least one attribute must be checked.")
+            return
+
+        if not has_chosen_target_attrs:
+            QMessageBox.warning(self, "Warning", "All checked attributes must have a target attribute.")
+            return
+
+        self.accept()

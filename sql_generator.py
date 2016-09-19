@@ -27,14 +27,18 @@ def list_triggers(conn):
     cur = conn.cursor()
     sources = {}  # key = trigger ID, value = source table name
     targets = {}  # key = trigger ID, value = target table name
-    cur.execute("SELECT tgname, relname FROM pg_trigger LEFT JOIN pg_class ON tgrelid = pg_class.oid WHERE tgname LIKE '%s%%'" % prefix_trg)
+    cur.execute("""SELECT tgname, relname, nspname FROM pg_trigger
+        LEFT JOIN pg_class ON tgrelid = pg_class.oid
+        LEFT JOIN pg_namespace nsp ON relnamespace = nsp.oid
+        WHERE tgname LIKE '%s%%'""" % prefix_trg)
     for row in cur.fetchall():
         (trigger_id, is_source) = parse_trigger_name(row[0])
         table_name = row[1]
+        schema_name = row[2]
         if is_source:
-            sources[trigger_id] = table_name
+            sources[trigger_id] = schema_name + "." + table_name
         else:
-            targets[trigger_id] = table_name
+            targets[trigger_id] = schema_name + "." + table_name
             
     lst = []
     for trigger_id in sources:
