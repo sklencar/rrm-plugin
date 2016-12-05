@@ -48,8 +48,20 @@ def get_table_fields(conn, schema, table):
 
 
 def get_spatial_tables(conn):
-    sql = "SELECT f_table_schema, f_table_name, f_geometry_column FROM geometry_columns"
+    sql = """SELECT f_table_schema, f_table_name, f_geometry_column
+             FROM geometry_columns
+             ORDER BY f_table_schema, f_table_name"""
 
+    cur = conn.cursor()
+    cur.execute(sql)
+    return cur.fetchall()
+
+
+def get_schemas(conn):
+    sql = """SELECT oid, nspname
+             FROM pg_namespace
+             WHERE nspname !~ '^pg_' AND nspname != 'information_schema'
+             ORDER BY nspname"""
     cur = conn.cursor()
     cur.execute(sql)
     return cur.fetchall()
@@ -91,23 +103,30 @@ class TriggerDialog(BASE, WIDGET):
         self.delegate = MyDelegate()
         self.treeMapping.setItemDelegateForColumn(1, self.delegate)
 
-        # populate source/target layers
+        # populate source/target schemas
+        for schema_oid, schema_name in get_schemas(conn):
+            self.cboSourceSchema.addItem(schema_name)
+            self.cboTargetSchema.addItem(schema_name)
+
+        self.cboSourceSchema.currentIndexChanged.connect(self.populate_source_tables)
+        self.cboTargetSchema.currentIndexChanged.connect(self.populate_target_tables)
+
         self.layers = get_spatial_tables(conn)
-        for schema, table, geom in self.layers:
-            self.cboSource.addItem(schema + "." + table)
-            self.cboTarget.addItem(schema + "." + table)
+
+        self.populate_source_tables()
+        self.populate_target_tables()
 
         if sql_gen is not None:
             source_schema, source_table = sql_gen.source_table.split('.')
-            src_index = self.cboSource.findText(source_schema + "." + source_table)
-            self.cboSource.setCurrentIndex(src_index)
+            self.cboSourceSchema.setCurrentIndex(self.cboSourceSchema.findText(source_schema))
+            self.cboSourceTable.setCurrentIndex(self.cboSourceTable.findText(source_table))
 
             target_schema, target_table = sql_gen.target_table.split('.')
-            target_index = self.cboTarget.findText(target_schema + "." + target_table)
-            self.cboTarget.setCurrentIndex(target_index)
+            self.cboTargetSchema.setCurrentIndex(self.cboTargetSchema.findText(target_schema))
+            self.cboTargetTable.setCurrentIndex(self.cboTargetTable.findText(target_table))
 
-        self.cboSource.currentIndexChanged.connect(self.populate_source_attrs)
-        self.cboTarget.currentIndexChanged.connect(self.populate_target_attrs)
+        self.cboSourceTable.currentIndexChanged.connect(self.populate_source_attrs)
+        self.cboTargetTable.currentIndexChanged.connect(self.populate_target_attrs)
 
         self.populate_source_attrs()
         self.populate_target_attrs()
@@ -125,16 +144,31 @@ class TriggerDialog(BASE, WIDGET):
                 item2 = self.treeMapping.model().item(source_field_index, 1)
                 item2.setText(target_attr)
 
+    def populate_source_tables(self):
+        current_schema = self.cboSourceSchema.currentText()
+        self.cboSourceTable.clear()
+        for schema, table, geom in self.layers:
+            if schema == current_schema:
+                self.cboSourceTable.addItem(table)
+
+    def populate_target_tables(self):
+        current_schema = self.cboTargetSchema.currentText()
+        self.cboTargetTable.clear()
+        for schema, table, geom in self.layers:
+            if schema == current_schema:
+                self.cboTargetTable.addItem(table)
+
     def populate_source_attrs(self):
 
         self.model.clear()
         self.model.setHorizontalHeaderLabels(["Source field", "Target field"])
 
-        index = self.cboSource.currentIndex()
-        if index < 0:
+        current_schema = self.cboSourceSchema.currentText()
+        current_table = self.cboSourceTable.currentText()
+        if not current_schema or not current_table:
             return
 
-        fields = get_table_fields(self.conn, self.layers[index][0], self.layers[index][1])
+        fields = get_table_fields(self.conn, current_schema, current_table)
         for field in fields:
             item = QStandardItem(field[1])
             item.setCheckable(True)
@@ -145,19 +179,20 @@ class TriggerDialog(BASE, WIDGET):
 
     def populate_target_attrs(self):
 
-        index = self.cboTarget.currentIndex()
-        if index < 0:
+        current_schema = self.cboTargetSchema.currentText()
+        current_table = self.cboTargetTable.currentText()
+        if not current_schema or not current_table:
             self.delegate.fields = []
             return
 
-        fields = get_table_fields(self.conn, self.layers[index][0], self.layers[index][1])
+        fields = get_table_fields(self.conn, current_schema, current_table)
         self.delegate.fields = [ field[1] for field in fields ]
 
     def to_sql_generator(self):
         """Populate and return SqlGenerator instance from trigger dialog"""
         sql_gen = SqlGenerator()
-        sql_gen.source_table = self.cboSource.currentText()
-        sql_gen.target_table = self.cboTarget.currentText()
+        sql_gen.source_table = self.cboSourceSchema.currentText() + "." + self.cboSourceTable.currentText()
+        sql_gen.target_table = self.cboTargetSchema.currentText() + "." + self.cboTargetTable.currentText()
         # mapping
         sql_gen.attr_map = {}
         for row in xrange(self.model.rowCount()):
@@ -170,7 +205,8 @@ class TriggerDialog(BASE, WIDGET):
     def on_ok(self):
         """ Do some sanity checks before accepting the dialog """
 
-        if self.cboSource.currentText() == self.cboTarget.currentText():
+        if self.cboSourceTable.currentText() == self.cboTargetTable.currentText() and \
+           self.cboSourceSchema.currentText() == self.cboTargetSchema.currentText():
             QMessageBox.warning(self, "Warning", "Source and target tables must be different.")
             return
 

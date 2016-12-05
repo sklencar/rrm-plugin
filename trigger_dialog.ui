@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>461</width>
-    <height>542</height>
+    <height>628</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,7 +22,10 @@
     </widget>
    </item>
    <item>
-    <widget class="QComboBox" name="cboSource"/>
+    <widget class="QComboBox" name="cboSourceSchema"/>
+   </item>
+   <item>
+    <widget class="QComboBox" name="cboSourceTable"/>
    </item>
    <item>
     <widget class="QLabel" name="label_2">
@@ -32,7 +35,10 @@
     </widget>
    </item>
    <item>
-    <widget class="QComboBox" name="cboTarget"/>
+    <widget class="QComboBox" name="cboTargetSchema"/>
+   </item>
+   <item>
+    <widget class="QComboBox" name="cboTargetTable"/>
    </item>
    <item>
     <widget class="QLabel" name="label_3">
@@ -61,8 +67,10 @@
   </layout>
  </widget>
  <tabstops>
-  <tabstop>cboSource</tabstop>
-  <tabstop>cboTarget</tabstop>
+  <tabstop>cboSourceSchema</tabstop>
+  <tabstop>cboSourceTable</tabstop>
+  <tabstop>cboTargetSchema</tabstop>
+  <tabstop>cboTargetTable</tabstop>
   <tabstop>treeMapping</tabstop>
   <tabstop>buttonBox</tabstop>
  </tabstops>
