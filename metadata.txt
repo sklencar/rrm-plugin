@@ -7,9 +7,9 @@ qgisMaximumVersion=2.99
 author=Martin Dobias
 email=martin.dobias@lutraconsulting.co.uk
 icon=icon.png
-about=
-homepage=
-tracker=
-repository=
+about=TODO
+homepage=https://github.com/raumregionmensch/rrm-plugin
+tracker=https://github.com/raumregionmensch/rrm-plugin
+repository=https://github.com/raumregionmensch/rrm-plugin
 tags=
 
