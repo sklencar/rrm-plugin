@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>RRM Plugin - Configuration</string>
+   <string>PostGIS Sampling Tool - Configuration</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>

@@ -1,13 +1,13 @@
 [general]
-name=RaumRegionMensch plugin
+name=PostGIS Sampling Tool
 description=Management of triggers in PostGIS database to copy attributes based on spatial relation
-version=1.2.0
+version=1.3.0
 qgisMinimumVersion=2.0
 qgisMaximumVersion=2.99
 author=Martin Dobias
 email=martin.dobias@lutraconsulting.co.uk
-icon=icon.png
-about=TODO
+icon=icon.svg
+about=See this page for more information: https://github.com/raumregionmensch/rrm-plugin/blob/master/README.md
 homepage=https://github.com/raumregionmensch/rrm-plugin
 tracker=https://github.com/raumregionmensch/rrm-plugin
 repository=https://github.com/raumregionmensch/rrm-plugin

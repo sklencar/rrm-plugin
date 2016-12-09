@@ -88,7 +88,7 @@ class ConfigDialog(BASE, WIDGET):
             conn = self.get_connection()
         except Exception:
             if self.cboConnection.currentIndex() > 0:
-                QMessageBox.warning(self, "RRM", "Cannot connect to the selected database connection!")
+                QMessageBox.warning(self, "PostGIS Sampling Tool", "Cannot connect to the selected database connection!")
             self.enable_controls(False)
             return
 

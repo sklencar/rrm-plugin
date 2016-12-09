@@ -1,1 +1,1 @@
-rm -f rrm_plugin.zip && git archive --prefix=rrm_plugin/ -o rrm_plugin.zip HEAD
+rm -f postgis_sampling_tool.zip && git archive --prefix=postgis_sampling_tool/ -o postgis_sampling_tool.zip HEAD

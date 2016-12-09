@@ -20,14 +20,14 @@ from config_dialog import ConfigDialog
 this_dir = os.path.dirname(__file__)
 
 def classFactory(iface):
-    return RRMPlugin(iface)
+    return PostGIS_SamplingToolPlugin(iface)
 
-class RRMPlugin:
+class PostGIS_SamplingToolPlugin:
     def __init__(self, iface):
         self.iface = iface
 
     def initGui(self):
-        self.action = QAction(QIcon(os.path.join(this_dir, 'icon.png')), u'Configure RRM', self.iface.mainWindow())
+        self.action = QAction(QIcon(os.path.join(this_dir, 'icon.svg')), u'Configure PostGIS Sampling Tool', self.iface.mainWindow())
         self.action.triggered.connect(self.run)
         self.iface.addToolBarIcon(self.action)
 
