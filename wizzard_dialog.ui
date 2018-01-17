@@ -72,8 +72,20 @@
         </property>
        </widget>
       </item>
-      <item row="6" column="0" colspan="2">
+      <item row="8" column="0" colspan="2">
        <widget class="QTreeView" name="fieldView"/>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLineEdit" name="prefixSourceAttr"/>
+      </item>
+      <item row="7" column="0">
+       <widget class="QLineEdit" name="prefixTargetAttr"/>
+      </item>
+      <item row="6" column="1">
+       <widget class="QLineEdit" name="suffixSourceAttr"/>
+      </item>
+      <item row="7" column="1">
+       <widget class="QLineEdit" name="suffixTargetAttr"/>
       </item>
      </layout>
     </widget>

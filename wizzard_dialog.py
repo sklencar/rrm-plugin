@@ -37,6 +37,9 @@ class WizzardDialog(BASE, WIDGET):
         self.field_model = QStandardItemModel()
         self.fieldView.setModel(self.field_model)
 
+        self.delegate = trigger_dialog.MyDelegate()
+        self.fieldView.setItemDelegateForColumn(1, self.delegate)
+
         for schema_oid, schema_name in trigger_dialog.get_schemas(conn):
             self.cboSourceSchema.addItem(schema_name)
             self.cboTargetSchema.addItem(schema_name)
@@ -87,18 +90,53 @@ class WizzardDialog(BASE, WIDGET):
 
     def populate_tables(self):
         tabs1 = self.get_tables(self.cboSourceSchema.currentText())
-        fil_tab1 = self.filter_prefix_suffix(tabs1, self.prefixSourceFld.text(), self.suffixSourceFld.text())
-
         tabs2 = self.get_tables(self.cboTargetSchema.currentText())
-        fil_tab2 = self.filter_prefix_suffix(tabs2, self.prefixTargetFld.text(), self.suffixTargetFld.text())
 
-        tab11 = [(tabs1[ix], self.cboSourceSchema.currentText()) for (item, ix) in fil_tab1 if item in [i for (i, ixx) in fil_tab2]]
-        tab22 = [(tabs2[ix], self.cboTargetSchema.currentText()) for (item, ix) in fil_tab2 if item in [i for (i, ixx) in fil_tab1]]
-
+        tab11, tab22 = self.get_similar(tabs1, tabs2, self.prefixSourceFld.text(), self.suffixSourceFld.text(), self.prefixTargetFld.text(), self.suffixTargetFld.text())
         self.tables = tab11 + tab22
         self.update_table_model()
 
-        self.update_field_model()
+        source = [elem for (elem, schema) in tab11]
+        target = [elem for (elem, schema) in tab22]
+
+        self.populate_attr(source, target)
+
+    def populate_attr(self, source_tabs, target_tabs):
+        fields1 = self.get_attr(self.cboSourceSchema.currentText(), source_tabs)
+        fields2 = self.get_attr(self.cboTargetSchema.currentText(), target_tabs)
+
+        tab11, tab22 = self.get_similar(fields1, fields2, self.prefixSourceAttr.text(), self.suffixSourceAttr.text(),
+                                        self.prefixTargetAttr.text(), self.suffixTargetAttr.text())
+        self.update_field_model(tab11, tab22)
+
+    def get_attr(self, schema, tables):
+        all_fields = []
+        for table in tables:
+            fields = trigger_dialog.get_table_fields(self.conn, schema, table)
+            fields_name = [elem[1] for elem in fields]
+            all_fields.append(fields_name)
+
+
+        filtered_fields = self.get_elems_occured_in_all(all_fields)
+        return list(filtered_fields)
+
+    def get_elems_occured_in_all(self, lists):
+        sets = list(map(set, lists))
+        if not sets: return []
+
+        result = sets[0]
+        for s in sets:
+            result = result.intersection(s)
+        return result
+
+    def get_similar(self, tabs1, tabs2, prefix1, suffix1, prefix2, suffix2):
+        fil_tab1 = self.filter_prefix_suffix(tabs1, prefix1, suffix1)
+        fil_tab2 = self.filter_prefix_suffix(tabs2, prefix2, suffix2)
+        tab11 = [(tabs1[ix], self.cboSourceSchema.currentText()) for (item, ix) in fil_tab1 if
+                 item in [i for (i, ixx) in fil_tab2]]
+        tab22 = [(tabs2[ix], self.cboTargetSchema.currentText()) for (item, ix) in fil_tab2 if
+                 item in [i for (i, ixx) in fil_tab1]]
+        return tab11, tab22
 
     def get_tables(self, current_schema):
         tables = []
@@ -118,24 +156,22 @@ class WizzardDialog(BASE, WIDGET):
 
     # TODO refactor with trigger dialog
     # todo run when selection has changed
-    def update_field_model(self):
+    def update_field_model(self, source_fields, target_fields):
 
         self.field_model.clear()
         self.field_model.setHorizontalHeaderLabels(["Source field", "Target field"])
 
-        current_schema = self.cboSourceSchema.currentText()
-        selected_tables = self.get_selected_tables()
+        # TODO handle if not same length
+        if len(source_fields) != len(target_fields): return
 
-        if not current_schema or not selected_tables:
-            return
+        for ix, field in enumerate(source_fields):
+            item = QStandardItem(field[0])
+            item.setCheckable(True)
+            item.setEditable(False)
 
-        for table in selected_tables:
-            fields = trigger_dialog.get_table_fields(self.conn, current_schema, table)
-            for field in fields:
-                item = QStandardItem(field[1])
-                item.setCheckable(True)
-                item.setEditable(False)
-                self.field_model.appendRow([item, QStandardItem("[none]")])
+            item1 = QStandardItem(target_fields[ix][0])
+            item1.setEditable(False)
+            self.field_model.appendRow([item, item1])
 
         self.fieldView.resizeColumnToContents(0)
 
