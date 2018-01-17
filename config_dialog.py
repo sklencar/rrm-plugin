@@ -22,6 +22,7 @@ from qgis.core import QgsApplication
 from trigger_dialog import TriggerDialog
 from sql_generator import SqlGenerator, list_triggers
 from pg_connection import connection_from_name
+from wizzard_dialog import WizzardDialog
 
 this_dir = os.path.dirname(__file__)
 
@@ -61,6 +62,7 @@ class ConfigDialog(BASE, WIDGET):
         self.btnAdd.clicked.connect(self.add_trigger)
         self.btnEdit.clicked.connect(self.edit_trigger)
         self.btnRemove.clicked.connect(self.remove_trigger)
+        self.btnWizzard.clicked.connect(self.open_wizzard)
 
         self.populate_triggers()
 
@@ -112,7 +114,10 @@ class ConfigDialog(BASE, WIDGET):
         self._update_triggers_model()
 
 
+    # TODO @vsklencar update trigger
     def _update_triggers_model(self):
+
+        print("_update_triggers_model")
 
         schema_filter = self.cboSchema.currentText() if self.cboSchema.currentIndex() > 0 else None
         def _filter_accepts(table_name):
@@ -135,7 +140,14 @@ class ConfigDialog(BASE, WIDGET):
 
         self.treeTriggers.resizeColumnToContents(1)
 
+    def open_wizzard(self):
+        conn = self.get_connection()
+        dlg = WizzardDialog(conn)
+        if not dlg.exec_():
+            return
+
     def add_trigger(self):
+        print("add_trigger")
         conn = self.get_connection()
         dlg = TriggerDialog(conn)
         if not dlg.exec_():
@@ -174,6 +186,7 @@ class ConfigDialog(BASE, WIDGET):
 
     def edit_trigger(self):
 
+        print ("edit_trigger")
         sql_gen = self._current_item_to_sql_generator()
         if not sql_gen:
             return
