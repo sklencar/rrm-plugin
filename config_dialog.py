@@ -145,9 +145,19 @@ class ConfigDialog(BASE, WIDGET):
         dlg = WizzardDialog(conn)
         if not dlg.exec_():
             return
+        generators = dlg.to_sql_generator()
+
+        for sql_gen in generators:
+            sql_gen.trg_fcn_id = self._new_trigger_id()
+            sql = sql_gen.create_sql()
+            print(sql)
+            cur = conn.cursor()
+            cur.execute("BEGIN;" + sql + "COMMIT;")
+
+        self.populate_triggers()
+
 
     def add_trigger(self):
-        print("add_trigger")
         conn = self.get_connection()
         dlg = TriggerDialog(conn)
         if not dlg.exec_():
