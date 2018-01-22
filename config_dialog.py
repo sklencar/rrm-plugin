@@ -131,6 +131,9 @@ class ConfigDialog(BASE, WIDGET):
             item_2 = QStandardItem(target_table)
             for i in [item_0, item_1, item_2]:
                 i.setEditable(False)
+                if not source_table or not target_table:
+                    i.setData(QColor("pink"), Qt.BackgroundRole)
+                    i.setToolTip("Not valid, the trigger is missing source or target table.")
             self.model.appendRow([item_0, item_1, item_2])
 
         self.treeTriggers.resizeColumnToContents(1)
