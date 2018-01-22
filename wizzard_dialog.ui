@@ -41,18 +41,84 @@
        <widget class="QComboBox" name="cboTargetSchema"/>
       </item>
       <item row="2" column="0">
-       <widget class="QLineEdit" name="prefixSourceFld"/>
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Tables</string>
+        </property>
+       </widget>
       </item>
       <item row="2" column="1">
-       <widget class="QLineEdit" name="suffixSourceFld"/>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLineEdit" name="prefixTargetFld"/>
-      </item>
-      <item row="3" column="1">
-       <widget class="QLineEdit" name="suffixTargetFld"/>
+       <widget class="QComboBox" name="cboTablesOpt">
+        <item>
+         <property name="text">
+          <string>Share the same name</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Prefix for source tables</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Suffix for source tables</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Prefix for target tables</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Suffix for target tables</string>
+         </property>
+        </item>
+       </widget>
       </item>
       <item row="4" column="0" colspan="2">
+       <widget class="QLineEdit" name="tableFld"/>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Fields</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QComboBox" name="cboFieldsOpt">
+        <item>
+         <property name="text">
+          <string>Share the same name</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Suffix for source fields</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Prefix for source fields</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Prefix for target fields</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Suffix for target fields</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="6" column="0" colspan="2">
+       <widget class="QLineEdit" name="attrFld"/>
+      </item>
+      <item row="7" column="0" colspan="2">
        <widget class="QTreeView" name="tableView">
         <property name="minimumSize">
          <size>
@@ -61,18 +127,6 @@
          </size>
         </property>
        </widget>
-      </item>
-      <item row="5" column="0">
-       <widget class="QLineEdit" name="prefixSourceAttr"/>
-      </item>
-      <item row="5" column="1">
-       <widget class="QLineEdit" name="suffixSourceAttr"/>
-      </item>
-      <item row="6" column="0">
-       <widget class="QLineEdit" name="prefixTargetAttr"/>
-      </item>
-      <item row="6" column="1">
-       <widget class="QLineEdit" name="suffixTargetAttr"/>
       </item>
      </layout>
     </widget>

@@ -40,15 +40,12 @@ class WizzardDialog(BASE, WIDGET):
 
         self.cboSourceSchema.currentIndexChanged.connect(self.populate_tables)
         self.cboTargetSchema.currentIndexChanged.connect(self.populate_tables)
-        self.prefixSourceFld.textChanged.connect(self.populate_tables)
-        self.suffixSourceFld.textChanged.connect(self.populate_tables)
-        self.prefixTargetFld.textChanged.connect(self.populate_tables)
-        self.suffixTargetFld.textChanged.connect(self.populate_tables)
 
-        self.prefixSourceAttr.textChanged.connect(self.populate_tables)
-        self.suffixSourceAttr.textChanged.connect(self.populate_tables)
-        self.prefixTargetAttr.textChanged.connect(self.populate_tables)
-        self.suffixTargetAttr.textChanged.connect(self.populate_tables)
+        self.tableFld.textChanged.connect(self.populate_tables)
+        self.cboTablesOpt.currentIndexChanged.connect(self.populate_tables)
+
+        self.attrFld.textChanged.connect(self.populate_tables)
+        self.cboFieldsOpt.currentIndexChanged.connect(self.populate_tables)
 
         self.layers = trigger_dialog.get_spatial_tables(conn)
         self.populate_tables()
@@ -86,7 +83,12 @@ class WizzardDialog(BASE, WIDGET):
         tabs1 = self.get_tables(self.cboSourceSchema.currentText())
         tabs2 = self.get_tables(self.cboTargetSchema.currentText())
 
-        tab11, tab22 = self.get_similar(tabs1, tabs2, self.prefixSourceFld.text(), self.suffixSourceFld.text(), self.prefixTargetFld.text(), self.suffixTargetFld.text())
+        prefixSource = self.tableFld.text() if self.cboTablesOpt.currentIndex() == 1 else ""
+        suffixSource = self.tableFld.text() if self.cboTablesOpt.currentIndex() == 2 else ""
+        prefixTarget = self.tableFld.text() if self.cboTablesOpt.currentIndex() == 3 else ""
+        suffixTarget = self.tableFld.text() if self.cboTablesOpt.currentIndex() == 4 else ""
+
+        tab11, tab22 = self.get_similar(tabs1, tabs2, prefixSource, suffixSource, prefixTarget, suffixTarget)
 
         source = [elem for (elem, schema) in tab11]
         target = [elem for (elem, schema) in tab22]
@@ -102,9 +104,12 @@ class WizzardDialog(BASE, WIDGET):
             fields1 = self.get_attr(self.cboSourceSchema.currentText(), source_tab)
             fields2 = self.get_attr(self.cboTargetSchema.currentText(), target_tab)
 
-            tab11, tab22 = self.get_similar(fields1, fields2, self.prefixSourceAttr.text(),
-                                            self.suffixSourceAttr.text(),
-                                            self.prefixTargetAttr.text(), self.suffixTargetAttr.text())
+            prefixSource = self.attrFld.text() if self.cboFieldsOpt.currentIndex() == 1 else ""
+            suffixSource = self.attrFld.text() if self.cboFieldsOpt.currentIndex() == 2 else ""
+            prefixTarget = self.attrFld.text() if self.cboFieldsOpt.currentIndex() == 3 else ""
+            suffixTarget = self.attrFld.text() if self.cboFieldsOpt.currentIndex() == 4 else ""
+
+            tab11, tab22 = self.get_similar(fields1, fields2, prefixSource,suffixSource, prefixTarget, suffixTarget)
 
             source = [elem for (elem, schema) in tab11]
             target = [elem for (elem, schema) in tab22]
