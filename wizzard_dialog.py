@@ -11,10 +11,9 @@
 # ---------------------------------------------------------------------
 
 import os
-
 from PyQt4 import uic
-from PyQt4.QtCore import *
 
+from PyQt4.QtCore import *
 from PyQt4.QtGui import QStandardItemModel, QStandardItem
 
 import trigger_dialog
@@ -35,9 +34,6 @@ class WizzardDialog(BASE, WIDGET):
         self.table_model = QStandardItemModel()
         self.tableView.setModel(self.table_model)
 
-        self.field_model = QStandardItemModel()
-        self.fieldView.setModel(self.field_model)
-
         for schema_oid, schema_name in trigger_dialog.get_schemas(conn):
             self.cboSourceSchema.addItem(schema_name)
             self.cboTargetSchema.addItem(schema_name)
@@ -48,6 +44,11 @@ class WizzardDialog(BASE, WIDGET):
         self.suffixSourceFld.textChanged.connect(self.populate_tables)
         self.prefixTargetFld.textChanged.connect(self.populate_tables)
         self.suffixTargetFld.textChanged.connect(self.populate_tables)
+
+        self.prefixSourceAttr.textChanged.connect(self.populate_tables)
+        self.suffixSourceAttr.textChanged.connect(self.populate_tables)
+        self.prefixTargetAttr.textChanged.connect(self.populate_tables)
+        self.suffixTargetAttr.textChanged.connect(self.populate_tables)
 
         self.layers = trigger_dialog.get_spatial_tables(conn)
         self.populate_tables()
@@ -73,8 +74,6 @@ class WizzardDialog(BASE, WIDGET):
 
         for source, target in pairs:
             ix += 1
-            # if not _filter_accepts(source_table) and not _filter_accepts(target_table):
-            #     continue
             item_0 = QStandardItem(source)
             item_1 = QStandardItem(target)
             for i in [item_0, item_1]:
@@ -145,13 +144,9 @@ class WizzardDialog(BASE, WIDGET):
                 tables.append(table)
         return tables
 
-    # TODO refactor with trigger dialog
-    # todo run when selection has changed
     def update_field_model(self, pairs):
-
         row = self.table_model.rowCount()
         for ix in range(0, row):
-
             content = self.table_model.data(self.table_model.index(ix, 0))
             related_table_item = self.table_model.item(ix)
             if content in pairs:
@@ -164,8 +159,6 @@ class WizzardDialog(BASE, WIDGET):
                         i.setEditable(False)
                     related_table_item.appendRow([item_0, item_1])
 
-        self.fieldView.resizeColumnToContents(0)
-
 
     def single_sgl_generator(self, source_table, target_table, parent_item):
         sql_gen = SqlGenerator()
@@ -176,7 +169,6 @@ class WizzardDialog(BASE, WIDGET):
 
         for ix in range(0,parent_item.rowCount()):
             if parent_item.child(ix, 0).checkState() == Qt.Checked:
-                print(parent_item.child(ix, 0).text())
                 source_attr = parent_item.child(ix, 0).text()
                 target_attr = parent_item.child(ix, 1).text()
                 sql_gen.attr_map[source_attr] = target_attr
@@ -187,7 +179,6 @@ class WizzardDialog(BASE, WIDGET):
 
     def to_sql_generator(self):
         generators = []
-        print("to_sql_generator")
         for row in xrange(self.table_model.rowCount()):
             item = self.table_model.item(row)
             source_table = item.text()
@@ -195,9 +186,7 @@ class WizzardDialog(BASE, WIDGET):
             if item.hasChildren():
                 gen = self.single_sgl_generator(source_table, target_table, item)
                 if gen:
-                    print(gen.attr_map)
                     generators.append(gen)
 
-        print(len(generators))
         return generators
 

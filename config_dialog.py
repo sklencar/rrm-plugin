@@ -147,13 +147,16 @@ class ConfigDialog(BASE, WIDGET):
             return
         generators = dlg.to_sql_generator()
 
+        final_sql = ""
+        offset = 0
         for sql_gen in generators:
-            sql_gen.trg_fcn_id = self._new_trigger_id()
+            sql_gen.trg_fcn_id = self._new_trigger_id() + offset
             sql = sql_gen.create_sql()
-            print(sql)
-            cur = conn.cursor()
-            cur.execute("BEGIN;" + sql + "COMMIT;")
+            final_sql += sql + ";"
+            offset +=1
 
+        cur = conn.cursor()
+        cur.execute("BEGIN;" + final_sql + "COMMIT;")
         self.populate_triggers()
 
 

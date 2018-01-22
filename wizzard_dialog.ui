@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>865</width>
-    <height>1149</height>
+    <height>935</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,7 +23,7 @@
       <item row="0" column="0">
        <widget class="QLabel" name="label">
         <property name="text">
-         <string>TextLabel</string>
+         <string>Source Schema</string>
         </property>
        </widget>
       </item>
@@ -33,7 +33,7 @@
       <item row="1" column="0">
        <widget class="QLabel" name="label_2">
         <property name="text">
-         <string>TextLabel</string>
+         <string>Target Schema</string>
         </property>
        </widget>
       </item>
@@ -41,28 +41,18 @@
        <widget class="QComboBox" name="cboTargetSchema"/>
       </item>
       <item row="2" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>TextLabel</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QComboBox" name="cboTables"/>
-      </item>
-      <item row="3" column="0">
        <widget class="QLineEdit" name="prefixSourceFld"/>
       </item>
-      <item row="3" column="1">
+      <item row="2" column="1">
        <widget class="QLineEdit" name="suffixSourceFld"/>
       </item>
-      <item row="4" column="0">
+      <item row="3" column="0">
        <widget class="QLineEdit" name="prefixTargetFld"/>
       </item>
-      <item row="4" column="1">
+      <item row="3" column="1">
        <widget class="QLineEdit" name="suffixTargetFld"/>
       </item>
-      <item row="5" column="0" colspan="2">
+      <item row="4" column="0" colspan="2">
        <widget class="QTreeView" name="tableView">
         <property name="minimumSize">
          <size>
@@ -72,19 +62,16 @@
         </property>
        </widget>
       </item>
-      <item row="8" column="0" colspan="2">
-       <widget class="QTreeView" name="fieldView"/>
-      </item>
-      <item row="6" column="0">
+      <item row="5" column="0">
        <widget class="QLineEdit" name="prefixSourceAttr"/>
       </item>
-      <item row="7" column="0">
+      <item row="5" column="1">
+       <widget class="QLineEdit" name="suffixSourceAttr"/>
+      </item>
+      <item row="6" column="0">
        <widget class="QLineEdit" name="prefixTargetAttr"/>
       </item>
       <item row="6" column="1">
-       <widget class="QLineEdit" name="suffixSourceAttr"/>
-      </item>
-      <item row="7" column="1">
        <widget class="QLineEdit" name="suffixTargetAttr"/>
       </item>
      </layout>
