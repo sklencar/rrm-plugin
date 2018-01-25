@@ -14,7 +14,7 @@ import os
 from PyQt4 import uic
 
 from PyQt4.QtCore import *
-from PyQt4.QtGui import QStandardItemModel, QStandardItem
+from PyQt4.QtGui import QStandardItemModel, QStandardItem, QHeaderView
 
 import trigger_dialog
 from sql_generator import SqlGenerator
@@ -42,12 +42,22 @@ class WizzardDialog(BASE, WIDGET):
         self.cboTargetSchema.currentIndexChanged.connect(self.populate_tables)
 
         self.tableFld.textChanged.connect(self.populate_tables)
-        self.cboTablesOpt.currentIndexChanged.connect(self.populate_tables)
+        self.tableFld.setVisible(self.cboTablesOpt.currentIndex() != 0)
+        self.cboTablesOpt.currentIndexChanged.connect(self.table_search_option_changed)
 
         self.attrFld.textChanged.connect(self.populate_tables)
-        self.cboFieldsOpt.currentIndexChanged.connect(self.populate_tables)
+        self.attrFld.setVisible(self.cboFieldsOpt.currentIndex() != 0)
+        self.cboFieldsOpt.currentIndexChanged.connect(self.field_search_option_changed)
 
         self.layers = trigger_dialog.get_spatial_tables(conn)
+        self.populate_tables()
+
+    def table_search_option_changed(self, index):
+        self.tableFld.setVisible(index != 0)
+        self.populate_tables()
+
+    def field_search_option_changed(self, index):
+        self.attrFld.setVisible(index != 0)
         self.populate_tables()
 
     # TODO support for regex??
@@ -83,12 +93,12 @@ class WizzardDialog(BASE, WIDGET):
         tabs1 = self.get_tables(self.cboSourceSchema.currentText())
         tabs2 = self.get_tables(self.cboTargetSchema.currentText())
 
-        prefixSource = self.tableFld.text() if self.cboTablesOpt.currentIndex() == 1 else ""
-        suffixSource = self.tableFld.text() if self.cboTablesOpt.currentIndex() == 2 else ""
-        prefixTarget = self.tableFld.text() if self.cboTablesOpt.currentIndex() == 3 else ""
-        suffixTarget = self.tableFld.text() if self.cboTablesOpt.currentIndex() == 4 else ""
+        prefix_source = self.tableFld.text() if self.cboTablesOpt.currentIndex() == 1 else ""
+        suffix_source = self.tableFld.text() if self.cboTablesOpt.currentIndex() == 2 else ""
+        prefix_target = self.tableFld.text() if self.cboTablesOpt.currentIndex() == 3 else ""
+        suffix_target = self.tableFld.text() if self.cboTablesOpt.currentIndex() == 4 else ""
 
-        tab11, tab22 = self.get_similar(tabs1, tabs2, prefixSource, suffixSource, prefixTarget, suffixTarget)
+        tab11, tab22 = self.get_similar(tabs1, tabs2, prefix_source, suffix_source, prefix_target, suffix_target)
 
         source = [elem for (elem, schema) in tab11]
         target = [elem for (elem, schema) in tab22]
@@ -96,6 +106,7 @@ class WizzardDialog(BASE, WIDGET):
         pairs = [(source[ix], target[ix]) for ix in range(len(source))]
         self.update_table_model(pairs)
         self.populate_attr(pairs)
+        self.tableView.resizeColumnToContents(0)
 
     def populate_attr(self, pairs):
 
@@ -104,12 +115,12 @@ class WizzardDialog(BASE, WIDGET):
             fields1 = self.get_attr(self.cboSourceSchema.currentText(), source_tab)
             fields2 = self.get_attr(self.cboTargetSchema.currentText(), target_tab)
 
-            prefixSource = self.attrFld.text() if self.cboFieldsOpt.currentIndex() == 1 else ""
-            suffixSource = self.attrFld.text() if self.cboFieldsOpt.currentIndex() == 2 else ""
-            prefixTarget = self.attrFld.text() if self.cboFieldsOpt.currentIndex() == 3 else ""
-            suffixTarget = self.attrFld.text() if self.cboFieldsOpt.currentIndex() == 4 else ""
+            prefix_source = self.attrFld.text() if self.cboFieldsOpt.currentIndex() == 1 else ""
+            suffix_source = self.attrFld.text() if self.cboFieldsOpt.currentIndex() == 2 else ""
+            prefix_target = self.attrFld.text() if self.cboFieldsOpt.currentIndex() == 3 else ""
+            suffix_target = self.attrFld.text() if self.cboFieldsOpt.currentIndex() == 4 else ""
 
-            tab11, tab22 = self.get_similar(fields1, fields2, prefixSource,suffixSource, prefixTarget, suffixTarget)
+            tab11, tab22 = self.get_similar(fields1, fields2, prefix_source,suffix_source, prefix_target, suffix_target)
 
             source = [elem for (elem, schema) in tab11]
             target = [elem for (elem, schema) in tab22]
@@ -136,10 +147,13 @@ class WizzardDialog(BASE, WIDGET):
     def get_similar(self, tabs1, tabs2, prefix1, suffix1, prefix2, suffix2):
         fil_tab1 = self.filter_prefix_suffix(tabs1, prefix1, suffix1)
         fil_tab2 = self.filter_prefix_suffix(tabs2, prefix2, suffix2)
-        tab11 = [(tabs1[ix], self.cboSourceSchema.currentText()) for (item, ix) in fil_tab1 if
-                 item in [i for (i, ixx) in fil_tab2]]
-        tab22 = [(tabs2[ix], self.cboTargetSchema.currentText()) for (item, ix) in fil_tab2 if
-                 item in [i for (i, ixx) in fil_tab1]]
+        pairs = []
+        for ix in range(len(fil_tab1)):
+            item = fil_tab1[ix]
+            if item in fil_tab2:
+                pairs.append((ix, fil_tab2.index(item)))
+        tab11 = [(tabs1[ix], self.cboSourceSchema.currentText()) for ix, ix2 in pairs]
+        tab22 = [(tabs2[ix2], self.cboTargetSchema.currentText()) for ix, ix2 in pairs]
         return tab11, tab22
 
     def get_tables(self, current_schema):
@@ -159,6 +173,7 @@ class WizzardDialog(BASE, WIDGET):
                 for source, target in attrs:
                     item_0 = QStandardItem(source)
                     item_0.setCheckable(True)
+                    item_0.setCheckState(Qt.Checked)
                     item_1 = QStandardItem(target)
                     for i in [item_0, item_1]:
                         i.setEditable(False)

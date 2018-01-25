@@ -85,7 +85,7 @@
      <item>
       <widget class="QToolButton" name="btnWizzard">
        <property name="text">
-        <string>...</string>
+        <string>Trigger Wizard</string>
        </property>
       </widget>
      </item>

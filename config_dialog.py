@@ -114,11 +114,7 @@ class ConfigDialog(BASE, WIDGET):
         self._update_triggers_model()
 
 
-    # TODO @vsklencar update trigger
     def _update_triggers_model(self):
-
-        print("_update_triggers_model")
-
         schema_filter = self.cboSchema.currentText() if self.cboSchema.currentIndex() > 0 else None
         def _filter_accepts(table_name):
             return schema_filter is None or table_name.startswith(schema_filter+".")
@@ -198,8 +194,6 @@ class ConfigDialog(BASE, WIDGET):
         return sql_gen
 
     def edit_trigger(self):
-
-        print ("edit_trigger")
         sql_gen = self._current_item_to_sql_generator()
         if not sql_gen:
             return

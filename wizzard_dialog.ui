@@ -7,47 +7,44 @@
     <x>0</x>
     <y>0</y>
     <width>865</width>
-    <height>935</height>
+    <height>1065</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Trigger Wizzard</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QWidget" name="widget" native="true">
-     <layout class="QFormLayout" name="formLayout">
-      <property name="fieldGrowthPolicy">
-       <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-      </property>
-      <item row="0" column="0">
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
        <widget class="QLabel" name="label">
         <property name="text">
          <string>Source Schema</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
+      <item>
        <widget class="QComboBox" name="cboSourceSchema"/>
       </item>
-      <item row="1" column="0">
+      <item>
        <widget class="QLabel" name="label_2">
         <property name="text">
          <string>Target Schema</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
+      <item>
        <widget class="QComboBox" name="cboTargetSchema"/>
       </item>
-      <item row="2" column="0">
+      <item>
        <widget class="QLabel" name="label_3">
         <property name="text">
          <string>Tables</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
+      <item>
        <widget class="QComboBox" name="cboTablesOpt">
         <item>
          <property name="text">
@@ -76,17 +73,17 @@
         </item>
        </widget>
       </item>
-      <item row="4" column="0" colspan="2">
+      <item>
        <widget class="QLineEdit" name="tableFld"/>
       </item>
-      <item row="5" column="0">
+      <item>
        <widget class="QLabel" name="label_4">
         <property name="text">
          <string>Fields</string>
         </property>
        </widget>
       </item>
-      <item row="5" column="1">
+      <item>
        <widget class="QComboBox" name="cboFieldsOpt">
         <item>
          <property name="text">
@@ -95,12 +92,12 @@
         </item>
         <item>
          <property name="text">
-          <string>Suffix for source fields</string>
+          <string>Prefix for source fields</string>
          </property>
         </item>
         <item>
          <property name="text">
-          <string>Prefix for source fields</string>
+          <string>Suffix for source fields</string>
          </property>
         </item>
         <item>
@@ -115,16 +112,38 @@
         </item>
        </widget>
       </item>
-      <item row="6" column="0" colspan="2">
+      <item>
        <widget class="QLineEdit" name="attrFld"/>
       </item>
-      <item row="7" column="0" colspan="2">
+      <item>
        <widget class="QTreeView" name="tableView">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="minimumSize">
          <size>
           <width>0</width>
-          <height>500</height>
+          <height>0</height>
          </size>
+        </property>
+        <property name="cursor" stdset="0">
+         <cursorShape>ArrowCursor</cursorShape>
+        </property>
+        <attribute name="headerStretchLastSection">
+         <bool>true</bool>
+        </attribute>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="doSampleCheck">
+        <property name="text">
+         <string>Do not sample UIC</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
