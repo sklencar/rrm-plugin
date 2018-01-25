@@ -64,6 +64,10 @@ class ConfigDialog(BASE, WIDGET):
 
         self.populate_triggers()
 
+    def showEvent(self, event):
+        self.delete_not_valid_triggers()
+
+
     def hideEvent(self, e):
         # using hideEvent() because closeEvent() was not called when "Close" button was clicked!
         settings = QSettings()
@@ -111,6 +115,35 @@ class ConfigDialog(BASE, WIDGET):
 
         self._update_triggers_model()
 
+    def delete_not_valid_triggers(self):
+        if not self.triggers: return
+
+        invalid = []
+        for trigger_id, src, trg in self.triggers:
+            if not src or not trg:
+                invalid.append((trigger_id, src, trg))
+
+        if not invalid: return
+
+        msgBox = QMessageBox()
+        msgBox.setWindowTitle("Invalid triggers found")
+        msgBox.setText("Do you want to delete all invalid triggers?")
+        msgBox.setStandardButtons(QMessageBox.Yes)
+        msgBox.addButton(QMessageBox.No)
+        msgBox.setDefaultButton(QMessageBox.No)
+        if msgBox.exec_() == QMessageBox.Yes:
+            for trigger_id, src, trg in invalid:
+                    sql_gen = SqlGenerator()
+                    sql_gen.trg_fcn_id = trigger_id
+                    sql_gen.source_table = src
+                    sql_gen.target_table = trg
+                    sql = sql_gen.drop_sql()
+
+                    conn = self.get_connection()
+                    cur = conn.cursor()
+                    cur.execute("BEGIN;" + sql + "COMMIT;")
+
+            self.populate_triggers()
 
     def _update_triggers_model(self):
 
@@ -131,6 +164,9 @@ class ConfigDialog(BASE, WIDGET):
             item_2 = QStandardItem(target_table)
             for i in [item_0, item_1, item_2]:
                 i.setEditable(False)
+                if not source_table or not target_table:
+                    i.setData(QColor("pink"), Qt.BackgroundRole)
+                    i.setToolTip("Not valid, the trigger is missing source or target table.")
             self.model.appendRow([item_0, item_1, item_2])
 
         self.treeTriggers.resizeColumnToContents(1)

@@ -39,10 +39,19 @@ def list_triggers(conn):
             sources[trigger_id] = schema_name + "." + table_name
         else:
             targets[trigger_id] = schema_name + "." + table_name
-            
+
     lst = []
     for trigger_id in sources:
-        lst.append( (trigger_id, sources[trigger_id], targets[trigger_id]) )
+        src = sources[trigger_id]
+        trg = targets[trigger_id] if trigger_id in targets else None
+        lst.append((trigger_id, src, trg))
+
+    diff = set(targets.keys()) - set(sources.keys())
+    for trigger_id in diff:
+        if trigger_id not in targets: continue
+        src = sources[trigger_id] if trigger_id in sources else None
+        trg = targets[trigger_id]
+        lst.append((trigger_id, src, trg))
     return lst
 
 
@@ -56,10 +65,10 @@ class SqlGenerator:
     
     def drop_sql(self):
         return """
-        DROP TRIGGER IF EXISTS %(prefix_trg)s_%(trg_fcn_id)d_source_trigger ON %(source_table)s;
-        DROP FUNCTION IF EXISTS %(prefix_fcn)s_%(trg_fcn_id)d_source_trigger();
-        DROP TRIGGER IF EXISTS %(prefix_trg)s_%(trg_fcn_id)d_target_trigger ON %(target_table)s;
-        DROP FUNCTION IF EXISTS %(prefix_fcn)s_%(trg_fcn_id)d_target_trigger();
+        DROP TRIGGER IF EXISTS %(prefix_trg)s_%(trg_fcn_id)d_source_trigger ON %(source_table)s cascade;
+        DROP FUNCTION IF EXISTS %(prefix_fcn)s_%(trg_fcn_id)d_source_trigger() cascade;
+        DROP TRIGGER IF EXISTS %(prefix_trg)s_%(trg_fcn_id)d_target_trigger ON %(target_table)s cascade;
+        DROP FUNCTION IF EXISTS %(prefix_fcn)s_%(trg_fcn_id)d_target_trigger() cascade;
         """ % {
             'source_table': self.source_table,
             'target_table': self.target_table,
