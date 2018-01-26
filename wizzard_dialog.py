@@ -14,8 +14,9 @@ import os
 from PyQt4 import uic
 
 from PyQt4.QtCore import *
-from PyQt4.QtGui import QStandardItemModel, QStandardItem, QHeaderView
+from PyQt4.QtGui import QStandardItemModel, QStandardItem
 
+import sql_generator
 import trigger_dialog
 from sql_generator import SqlGenerator
 
@@ -38,6 +39,8 @@ class WizzardDialog(BASE, WIDGET):
             self.cboSourceSchema.addItem(schema_name)
             self.cboTargetSchema.addItem(schema_name)
 
+        self.ignore_attr = sql_generator.list_uic_geom_fields(self.conn)
+
         self.cboSourceSchema.currentIndexChanged.connect(self.populate_tables)
         self.cboTargetSchema.currentIndexChanged.connect(self.populate_tables)
 
@@ -50,6 +53,9 @@ class WizzardDialog(BASE, WIDGET):
         self.cboFieldsOpt.currentIndexChanged.connect(self.field_search_option_changed)
 
         self.layers = trigger_dialog.get_spatial_tables(conn)
+        self.doSampleCheck.setCheckState(Qt.Checked)
+        self.doSampleCheck.stateChanged.connect(self.populate_tables)
+
         self.populate_tables()
 
     def table_search_option_changed(self, index):
@@ -132,17 +138,14 @@ class WizzardDialog(BASE, WIDGET):
 
     def get_attr(self, schema, table):
         fields = trigger_dialog.get_table_fields(self.conn, schema, table)
-        return [elem[1] for elem in fields]
+        return [elem[1] for elem in fields if self.is_not_ignored_attr(elem[1], schema, table)]
 
+    def is_not_ignored_attr(self, item, schema, table):
+        if self.doSampleCheck.isChecked():
+            return schema + '.' + table not in self.ignore_attr.keys() or item not in self.ignore_attr[schema + '.' + table]
+        else:
+            return True
 
-    def get_elems_occured_in_all(self, lists):
-        sets = list(map(set, lists))
-        if not sets: return []
-
-        result = sets[0]
-        for s in sets:
-            result = result.intersection(s)
-        return result
 
     def get_similar(self, tabs1, tabs2, prefix1, suffix1, prefix2, suffix2):
         fil_tab1 = self.filter_prefix_suffix(tabs1, prefix1, suffix1)
@@ -170,6 +173,8 @@ class WizzardDialog(BASE, WIDGET):
             related_table_item = self.table_model.item(ix)
             if content in pairs:
                 attrs = pairs[content]
+                if self.is_uic_attr(attrs): continue
+
                 for source, target in attrs:
                     item_0 = QStandardItem(source)
                     item_0.setCheckable(True)
@@ -178,6 +183,10 @@ class WizzardDialog(BASE, WIDGET):
                     for i in [item_0, item_1]:
                         i.setEditable(False)
                     related_table_item.appendRow([item_0, item_1])
+    def is_uic_attr(self, attrs):
+        source = attrs[0]
+        target = attrs[1]
+
 
 
     def single_sgl_generator(self, source_table, target_table, parent_item):
