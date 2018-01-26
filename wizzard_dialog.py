@@ -76,7 +76,7 @@ class WizzardDialog(BASE, WIDGET):
             if suffix and item.endswith(suffix):
                 item = "".join(item.rsplit(suffix, 1))
 
-            result.append((item, ix))
+            result.append(item)
             ix += 1
         return result
 
