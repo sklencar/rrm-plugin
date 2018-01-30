@@ -79,7 +79,7 @@ class ConfigDialog(BASE, WIDGET):
         return connection_from_name(name)
 
     def enable_controls(self, enabled):
-        for w in [self.btnAdd, self.btnEdit, self.btnRemove, self.cboSchema]:
+        for w in [self.btnAdd, self.btnEdit, self.btnRemove, self.cboSchema, self.btnWizard]:
             w.setEnabled(enabled)
 
     def populate_triggers(self):
