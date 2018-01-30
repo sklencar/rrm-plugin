@@ -22,7 +22,7 @@ from qgis.core import QgsApplication
 from trigger_dialog import TriggerDialog
 from sql_generator import SqlGenerator, list_triggers
 from pg_connection import connection_from_name
-from wizzard_dialog import WizzardDialog
+from wizard_dialog import WizardDialog
 
 this_dir = os.path.dirname(__file__)
 
@@ -62,7 +62,7 @@ class ConfigDialog(BASE, WIDGET):
         self.btnAdd.clicked.connect(self.add_trigger)
         self.btnEdit.clicked.connect(self.edit_trigger)
         self.btnRemove.clicked.connect(self.remove_trigger)
-        self.btnWizzard.clicked.connect(self.open_wizzard)
+        self.btnWizard.clicked.connect(self.open_wizard)
 
         self.populate_triggers()
 
@@ -136,9 +136,9 @@ class ConfigDialog(BASE, WIDGET):
 
         self.treeTriggers.resizeColumnToContents(1)
 
-    def open_wizzard(self):
+    def open_wizard(self):
         conn = self.get_connection()
-        dlg = WizzardDialog(conn)
+        dlg = WizardDialog(conn)
         if not dlg.exec_():
             return
         generators = dlg.to_sql_generator()

@@ -22,10 +22,10 @@ from sql_generator import SqlGenerator
 
 this_dir = os.path.dirname(__file__)
 
-WIDGET, BASE = uic.loadUiType(os.path.join(this_dir, 'wizzard_dialog.ui'))
+WIDGET, BASE = uic.loadUiType(os.path.join(this_dir, 'wizard_dialog.ui'))
 
 
-class WizzardDialog(BASE, WIDGET):
+class WizardDialog(BASE, WIDGET):
     def __init__(self, conn, parent=None):
         BASE.__init__(self, parent)
         self.setupUi(self)
