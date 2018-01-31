@@ -88,6 +88,8 @@ class WizardDialog(BASE, WIDGET):
         for source, target in pairs:
             ix += 1
             item_0 = QStandardItem(source)
+            item_0.setCheckable(True)
+            item_0.setCheckState(Qt.Checked)
             item_1 = QStandardItem(target)
             for i in [item_0, item_1]:
                 i.setEditable(False)
@@ -197,6 +199,8 @@ class WizardDialog(BASE, WIDGET):
         sql_gen.attr_map = {}
 
         for ix in range(0,parent_item.rowCount()):
+            if not parent_item.checkState() == Qt.Checked: continue
+
             if parent_item.child(ix, 0).checkState() == Qt.Checked:
                 source_attr = parent_item.child(ix, 0).text()
                 target_attr = parent_item.child(ix, 1).text()
