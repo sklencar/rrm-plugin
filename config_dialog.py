@@ -19,6 +19,7 @@ from PyQt4 import uic
 
 from qgis.core import QgsApplication
 
+import sql_generator
 from trigger_dialog import TriggerDialog
 from sql_generator import SqlGenerator, list_triggers
 from pg_connection import connection_from_name
@@ -62,10 +63,14 @@ class ConfigDialog(BASE, WIDGET):
         self.btnEdit.clicked.connect(self.edit_trigger)
         self.btnRemove.clicked.connect(self.remove_trigger)
 
+        self.broken_triggers = None
         self.populate_triggers()
+        self.delete_not_valid_triggers()
+
 
     def showEvent(self, event):
-        self.delete_not_valid_triggers()
+        pass
+        #self.delete_not_valid_triggers()
 
 
     def hideEvent(self, e):
@@ -113,14 +118,20 @@ class ConfigDialog(BASE, WIDGET):
 
         self.triggers = list_triggers(conn)
 
+        if self.broken_triggers == None:
+            self.broken_triggers = sql_generator.list_invalid_triggers(conn, self.triggers)
+
         self._update_triggers_model()
 
     def delete_not_valid_triggers(self):
         if not self.triggers: return
 
+        conn = self.get_connection()
         invalid = []
         for trigger_id, src, trg in self.triggers:
             if not src or not trg:
+                invalid.append((trigger_id, src, trg))
+            elif (trigger_id, src, trg) in self.broken_triggers:
                 invalid.append((trigger_id, src, trg))
 
         if not invalid: return
@@ -139,7 +150,6 @@ class ConfigDialog(BASE, WIDGET):
                     sql_gen.target_table = trg
                     sql = sql_gen.drop_sql()
 
-                    conn = self.get_connection()
                     cur = conn.cursor()
                     cur.execute("BEGIN;" + sql + "COMMIT;")
 
@@ -167,6 +177,10 @@ class ConfigDialog(BASE, WIDGET):
                 if not source_table or not target_table:
                     i.setData(QColor("pink"), Qt.BackgroundRole)
                     i.setToolTip("Not valid, the trigger is missing source or target table.")
+                if self.broken_triggers and (trigger_id, source_table, target_table) in self.broken_triggers:
+                    i.setData(QColor("pink"), Qt.BackgroundRole)
+                    i.setToolTip("The trigger function is invalid - probably a schema name has been changed.")
+
             self.model.appendRow([item_0, item_1, item_2])
 
         self.treeTriggers.resizeColumnToContents(1)

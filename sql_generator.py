@@ -54,6 +54,28 @@ def list_triggers(conn):
         lst.append((trigger_id, src, trg))
     return lst
 
+# function check ONLY if schema.table reference in fc exists!
+def list_invalid_triggers(conn, triggers):
+    cur = conn.cursor()
+    invalid = []
+
+    for id, source, target in triggers:
+        query = """
+        SELECT tgname, prosrc, nspname || '.' || relname as source FROM pg_trigger t
+        LEFT JOIN pg_class ON tgrelid = pg_class.oid
+        LEFT JOIN pg_namespace nsp ON relnamespace = nsp.oid
+        LEFT JOIN pg_proc f
+          ON f.oid = t.tgfoid
+        WHERE prosrc ILIKE '%(target)s'
+        AND nspname || '.' || relname = '%(source)s';
+        """ % {'target': str("%" + target + "%"), 'source':str(source)}
+        cur.execute(query)
+        res = list(cur.fetchall())
+        if not res:
+            invalid.append((id, source, target))
+
+    return invalid
+
 
 class SqlGenerator:
     """ Class to generate SQL for our triggers """
