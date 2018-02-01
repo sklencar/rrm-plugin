@@ -54,6 +54,7 @@ def list_triggers(conn):
         lst.append((trigger_id, src, trg))
     return lst
 
+
 # function check ONLY if schema.table reference in fc exists!
 def list_invalid_triggers(conn, triggers):
     cur = conn.cursor()
@@ -76,6 +77,24 @@ def list_invalid_triggers(conn, triggers):
             invalid.append((id, source, target))
 
     return invalid
+
+
+def list_uic_geom_fields(conn):
+    cur = conn.cursor()
+    query = """
+        SELECT f_table_schema as schema,
+        f_table_name as table,
+        f_geometry_column as geom,
+        kc.column_name as uid
+        FROM GEOMETRY_COLUMNS as g
+        JOIN information_schema.key_column_usage kc 
+        ON kc.table_name = g.f_table_name and kc.table_schema = g.f_table_schema
+    """
+    cur.execute(query)
+    uic_geom_columns = dict()
+    for row in cur.fetchall():
+        uic_geom_columns[row[0] + '.' + row[1]] = [row[2], row[3]]
+    return uic_geom_columns
 
 
 class SqlGenerator:

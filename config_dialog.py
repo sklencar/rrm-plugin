@@ -23,6 +23,7 @@ import sql_generator
 from trigger_dialog import TriggerDialog
 from sql_generator import SqlGenerator, list_triggers
 from pg_connection import connection_from_name
+from wizard_dialog import WizardDialog
 
 this_dir = os.path.dirname(__file__)
 
@@ -62,6 +63,7 @@ class ConfigDialog(BASE, WIDGET):
         self.btnAdd.clicked.connect(self.add_trigger)
         self.btnEdit.clicked.connect(self.edit_trigger)
         self.btnRemove.clicked.connect(self.remove_trigger)
+        self.btnWizard.clicked.connect(self.open_wizard)
 
         self.broken_triggers = None
         self.populate_triggers()
@@ -81,7 +83,7 @@ class ConfigDialog(BASE, WIDGET):
         return connection_from_name(name)
 
     def enable_controls(self, enabled):
-        for w in [self.btnAdd, self.btnEdit, self.btnRemove, self.cboSchema]:
+        for w in [self.btnAdd, self.btnEdit, self.btnRemove, self.cboSchema, self.btnWizard]:
             w.setEnabled(enabled)
 
     def populate_triggers(self):
@@ -153,7 +155,6 @@ class ConfigDialog(BASE, WIDGET):
             self.populate_triggers()
 
     def _update_triggers_model(self):
-
         schema_filter = self.cboSchema.currentText() if self.cboSchema.currentIndex() > 0 else None
         def _filter_accepts(table_name):
             return schema_filter is None or table_name.startswith(schema_filter+".")
@@ -181,6 +182,26 @@ class ConfigDialog(BASE, WIDGET):
             self.model.appendRow([item_0, item_1, item_2])
 
         self.treeTriggers.resizeColumnToContents(1)
+
+    def open_wizard(self):
+        conn = self.get_connection()
+        dlg = WizardDialog(conn)
+        if not dlg.exec_():
+            return
+        generators = dlg.to_sql_generator()
+
+        final_sql = ""
+        offset = 0
+        for sql_gen in generators:
+            sql_gen.trg_fcn_id = self._new_trigger_id() + offset
+            sql = sql_gen.create_sql()
+            final_sql += sql + ";"
+            offset +=1
+
+        cur = conn.cursor()
+        cur.execute("BEGIN;" + final_sql + "COMMIT;")
+        self.populate_triggers()
+
 
     def add_trigger(self):
         conn = self.get_connection()
@@ -220,7 +241,6 @@ class ConfigDialog(BASE, WIDGET):
         return sql_gen
 
     def edit_trigger(self):
-
         sql_gen = self._current_item_to_sql_generator()
         if not sql_gen:
             return

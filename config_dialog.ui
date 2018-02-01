@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>652</width>
-    <height>435</height>
+    <height>416</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -83,6 +83,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QToolButton" name="btnWizard">
+       <property name="text">
+        <string>Trigger Wizard</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QDialogButtonBox" name="buttonBox">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -102,7 +109,6 @@
   <tabstop>treeTriggers</tabstop>
   <tabstop>btnAdd</tabstop>
   <tabstop>btnEdit</tabstop>
-  <tabstop>btnRemove</tabstop>
   <tabstop>buttonBox</tabstop>
  </tabstops>
  <resources/>
