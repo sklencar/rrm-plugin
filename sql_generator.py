@@ -54,6 +54,31 @@ def list_triggers(conn):
         lst.append((trigger_id, src, trg))
     return lst
 
+
+# function check ONLY if schema.table reference in fc exists!
+def list_invalid_triggers(conn, triggers):
+    cur = conn.cursor()
+    invalid = []
+
+    for id, source, target in triggers:
+        query = """
+        SELECT tgname, prosrc, nspname || '.' || relname as source FROM pg_trigger t
+        LEFT JOIN pg_class ON tgrelid = pg_class.oid
+        LEFT JOIN pg_namespace nsp ON relnamespace = nsp.oid
+        LEFT JOIN pg_proc f
+          ON f.oid = t.tgfoid
+        WHERE prosrc ILIKE '%%%(target)s%%' AND nspname || '.' || relname = '%(source)s'
+        OR prosrc ILIKE '%%%(source)s%%' AND nspname || '.' || relname = '%(target)s';
+        """ % {'target': str(target), 'source':str(source)}
+        print(query)
+        cur.execute(query)
+        res = list(cur.fetchall())
+        if len(res) < 2:
+            invalid.append((id, source, target))
+
+    return invalid
+
+
 def list_uic_geom_fields(conn):
     cur = conn.cursor()
     query = """
