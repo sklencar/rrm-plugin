@@ -66,9 +66,9 @@ def list_invalid_triggers(conn, triggers):
         LEFT JOIN pg_namespace nsp ON relnamespace = nsp.oid
         LEFT JOIN pg_proc f
           ON f.oid = t.tgfoid
-        WHERE prosrc ILIKE '%(target)s' AND nspname || '.' || relname = '%(source)s'
-        OR prosrc ILIKE '%(source)s' AND nspname || '.' || relname = '%(target)s';
-        """ % {'target': str("%" + target + "%"), 'source':str(source)}
+        WHERE prosrc ILIKE '%(target1)s' AND nspname || '.' || relname = '%(source1)s'
+        OR prosrc ILIKE '%(target2)s' AND nspname || '.' || relname = '%(source2)s';
+        """ % {'target1': str("%" + target + "%"), 'source1':str(source), 'target2': str("%" + source + "%"), 'source2':str(target)}
         cur.execute(query)
         res = list(cur.fetchall())
         if len(res) < 2:

@@ -68,11 +68,6 @@ class ConfigDialog(BASE, WIDGET):
         self.delete_not_valid_triggers()
 
 
-    def showEvent(self, event):
-        pass
-        #self.delete_not_valid_triggers()
-
-
     def hideEvent(self, e):
         # using hideEvent() because closeEvent() was not called when "Close" button was clicked!
         settings = QSettings()
@@ -129,8 +124,10 @@ class ConfigDialog(BASE, WIDGET):
         conn = self.get_connection()
         invalid = []
         for trigger_id, src, trg in self.triggers:
+            # if source or target table has been deleted
             if not src or not trg:
                 invalid.append((trigger_id, src, trg))
+            # if schema has been changed, but trigger function not - invalid references in trigger fn
             elif (trigger_id, src, trg) in self.broken_triggers:
                 invalid.append((trigger_id, src, trg))
 
