@@ -95,7 +95,7 @@ class WizardDialog(BASE, WIDGET):
                 i.setEditable(False)
             self.table_model.appendRow([item_0, item_1])
 
-        self.tableView.resizeColumnToContents(1)
+        self.tableView.resizeColumnToContents(0)
 
     def populate_tables(self):
         tabs1 = self.get_tables(self.cboSourceSchema.currentText())
@@ -148,7 +148,6 @@ class WizardDialog(BASE, WIDGET):
         else:
             return True
 
-
     def get_similar(self, tabs1, tabs2, prefix1, suffix1, prefix2, suffix2):
         fil_tab1 = self.filter_prefix_suffix(tabs1, prefix1, suffix1)
         fil_tab2 = self.filter_prefix_suffix(tabs2, prefix2, suffix2)
@@ -156,10 +155,15 @@ class WizardDialog(BASE, WIDGET):
         for ix in range(len(fil_tab1)):
             item = fil_tab1[ix]
             if item in fil_tab2:
+                if not self.have_prefix_suffix(tabs1[ix], tabs2[fil_tab2.index(item)], prefix1, suffix1, prefix2,
+                        suffix2): continue
                 pairs.append((ix, fil_tab2.index(item)))
         tab11 = [(tabs1[ix], self.cboSourceSchema.currentText()) for ix, ix2 in pairs]
         tab22 = [(tabs2[ix2], self.cboTargetSchema.currentText()) for ix, ix2 in pairs]
         return tab11, tab22
+
+    def have_prefix_suffix(self, src, trg, prefix1, suffix1, prefix2, suffix2):
+        return prefix1 in src and suffix1 in src and prefix2 in trg and suffix2 in trg
 
     def get_tables(self, current_schema):
         tables = []
@@ -175,7 +179,7 @@ class WizardDialog(BASE, WIDGET):
             related_table_item = self.table_model.item(ix)
             if content in pairs:
                 attrs = pairs[content]
-                if self.is_uic_attr(attrs): continue
+                #if self.is_uic_attr(attrs): continue
 
                 for source, target in attrs:
                     item_0 = QStandardItem(source)
@@ -185,9 +189,9 @@ class WizardDialog(BASE, WIDGET):
                     for i in [item_0, item_1]:
                         i.setEditable(False)
                     related_table_item.appendRow([item_0, item_1])
-    def is_uic_attr(self, attrs):
-        source = attrs[0]
-        target = attrs[1]
+    # def is_uic_attr(self, attrs):
+    #     source = attrs[0]
+    #     target = attrs[1]
 
 
 
