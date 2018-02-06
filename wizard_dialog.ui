@@ -140,7 +140,7 @@
       <item>
        <widget class="QCheckBox" name="doSampleCheck">
         <property name="text">
-         <string>Do not sample UIC</string>
+         <string>Do not sample primary key and geometry</string>
         </property>
         <property name="checked">
          <bool>false</bool>

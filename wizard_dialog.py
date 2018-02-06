@@ -155,9 +155,11 @@ class WizardDialog(BASE, WIDGET):
         for ix in range(len(fil_tab1)):
             item = fil_tab1[ix]
             if item in fil_tab2:
-                if not self.have_prefix_suffix(tabs1[ix], tabs2[fil_tab2.index(item)], prefix1, suffix1, prefix2,
-                        suffix2): continue
-                pairs.append((ix, fil_tab2.index(item)))
+                indices = [i for i, x in enumerate(fil_tab2) if x == item]
+                for ix2 in indices:
+                    if not self.have_prefix_suffix(tabs1[ix], tabs2[ix2], prefix1, suffix1, prefix2,
+                            suffix2): continue
+                    pairs.append((ix, ix2))
         tab11 = [(tabs1[ix], self.cboSourceSchema.currentText()) for ix, ix2 in pairs]
         tab22 = [(tabs2[ix2], self.cboTargetSchema.currentText()) for ix, ix2 in pairs]
         return tab11, tab22

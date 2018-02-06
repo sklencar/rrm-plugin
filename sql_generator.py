@@ -70,7 +70,6 @@ def list_invalid_triggers(conn, triggers):
         WHERE prosrc ILIKE '%%%(target)s%%' AND nspname || '.' || relname = '%(source)s'
         OR prosrc ILIKE '%%%(source)s%%' AND nspname || '.' || relname = '%(target)s';
         """ % {'target': str(target), 'source':str(source)}
-        print(query)
         cur.execute(query)
         res = list(cur.fetchall())
         if len(res) < 2:
