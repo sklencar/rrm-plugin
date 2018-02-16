@@ -165,7 +165,7 @@ class WizardDialog(BASE, WIDGET):
         return tab11, tab22
 
     def have_prefix_suffix(self, src, trg, prefix1, suffix1, prefix2, suffix2):
-        return prefix1 in src and suffix1 in src and prefix2 in trg and suffix2 in trg
+        return src.startswith(prefix1) and src.endswith(suffix1) and trg.startswith(prefix2) and trg.endswith(suffix2)
 
     def get_tables(self, current_schema):
         tables = []
