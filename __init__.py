@@ -12,10 +12,9 @@
 
 import os
 
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
-
-from config_dialog import ConfigDialog
+from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtWidgets import QAction
+from .config_dialog import ConfigDialog
 
 this_dir = os.path.dirname(__file__)
 

@@ -11,14 +11,13 @@
 # ---------------------------------------------------------------------
 
 import os
-from PyQt4 import uic
+from qgis.PyQt import uic
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import QStandardItemModel, QStandardItem
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import QStandardItemModel, QStandardItem
 
-import sql_generator
-import trigger_dialog
-from sql_generator import SqlGenerator
+from .trigger_dialog import get_schemas, get_spatial_tables, get_table_fields
+from .sql_generator import SqlGenerator, list_uic_geom_fields
 
 this_dir = os.path.dirname(__file__)
 
@@ -35,11 +34,11 @@ class WizardDialog(BASE, WIDGET):
         self.table_model = QStandardItemModel()
         self.tableView.setModel(self.table_model)
 
-        for schema_oid, schema_name in trigger_dialog.get_schemas(conn):
+        for schema_oid, schema_name in get_schemas(conn):
             self.cboSourceSchema.addItem(schema_name)
             self.cboTargetSchema.addItem(schema_name)
 
-        self.ignore_attr = sql_generator.list_uic_geom_fields(self.conn)
+        self.ignore_attr = list_uic_geom_fields(self.conn)
 
         self.cboSourceSchema.currentIndexChanged.connect(self.populate_tables)
         self.cboTargetSchema.currentIndexChanged.connect(self.populate_tables)
@@ -52,7 +51,7 @@ class WizardDialog(BASE, WIDGET):
         self.attrFld.setVisible(self.cboFieldsOpt.currentIndex() != 0)
         self.cboFieldsOpt.currentIndexChanged.connect(self.field_search_option_changed)
 
-        self.layers = trigger_dialog.get_spatial_tables(conn)
+        self.layers = get_spatial_tables(conn)
         self.doSampleCheck.setCheckState(Qt.Checked)
         self.doSampleCheck.stateChanged.connect(self.populate_tables)
 
@@ -139,7 +138,7 @@ class WizardDialog(BASE, WIDGET):
         self.update_field_model(all_field_pairs)
 
     def get_attr(self, schema, table):
-        fields = trigger_dialog.get_table_fields(self.conn, schema, table)
+        fields = get_table_fields(self.conn, schema, table)
         return [elem[1] for elem in fields if self.is_not_ignored_attr(elem[1], schema, table)]
 
     def is_not_ignored_attr(self, item, schema, table):
@@ -218,7 +217,7 @@ class WizardDialog(BASE, WIDGET):
 
     def to_sql_generator(self):
         generators = []
-        for row in xrange(self.table_model.rowCount()):
+        for row in range(self.table_model.rowCount()):
             item = self.table_model.item(row)
             source_table = item.text()
             target_table = self.table_model.item(row, 1).text()

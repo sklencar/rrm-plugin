@@ -119,12 +119,13 @@ class SqlGenerator:
             }
 
     def create_sql(self):
+        if not self.attr_map:
+            return
         
-        first_target_attr = self.attr_map.values()[0]
-        
+        first_target_attr = next(iter(self.attr_map.values()))
         assignments_null = []
         assignments_copy = []
-        for source_attr, target_attr in self.attr_map.iteritems():
+        for source_attr, target_attr in self.attr_map.items():
             assignments_null.append("NEW.%s = NULL;" % target_attr)
             assignments_copy.append("NEW.%s = myrec.%s;" % (target_attr, source_attr))
             

@@ -13,17 +13,17 @@
 import os
 import psycopg2
 
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
-from PyQt4 import uic
+from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtCore import *
+from qgis.PyQt import uic
+from qgis.PyQt.QtWidgets import QMessageBox
 
 from qgis.core import QgsApplication
 
-import sql_generator
-from trigger_dialog import TriggerDialog
-from sql_generator import SqlGenerator, list_triggers
-from pg_connection import connection_from_name
-from wizard_dialog import WizardDialog
+from .trigger_dialog import TriggerDialog
+from .sql_generator import SqlGenerator, list_triggers, list_invalid_triggers
+from .pg_connection import connection_from_name
+from .wizard_dialog import WizardDialog
 
 this_dir = os.path.dirname(__file__)
 
@@ -116,7 +116,7 @@ class ConfigDialog(BASE, WIDGET):
         self.triggers = list_triggers(conn)
 
         if self.broken_triggers == None:
-            self.broken_triggers = sql_generator.list_invalid_triggers(conn, self.triggers)
+            self.broken_triggers = list_invalid_triggers(conn, self.triggers)
 
         self._update_triggers_model()
 
