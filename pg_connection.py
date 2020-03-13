@@ -15,9 +15,9 @@
 import os
 import psycopg2
 
-from qgis.core import QgsDataSourceURI, QgsCredentials
+from qgis.core import QgsDataSourceUri, QgsCredentials
+from qgis.PyQt.QtCore import QSettings
 
-from PyQt4.QtCore import QSettings
 
 def connection_from_name(name):
     settings = QSettings()
@@ -28,11 +28,16 @@ def connection_from_name(name):
 
     settingsList = ["service", "host", "port", "database", "username", "password", "authcfg"]
     service, host, port, database, username, password, authcfg = [settings.value(x, "", type=str) for x in settingsList]
-    sslmode = settings.value("sslmode", QgsDataSourceURI.SSLprefer, type=int)
 
-    uri = QgsDataSourceURI()
+    try:
+        sslmode = settings.value("sslmode", QgsDataSourceUri.SslPrefer, type=int)
+    except TypeError:
+        sslmode = QgsDataSourceUri.SslPrefer
+
+    uri = QgsDataSourceUri()
+
     if service:
-        uri.setConnection(service, database, username, password, sslmode, authcfg)
+        uri.setConnection(service, database, username, password, int(sslmode), authcfg)
     else:
         uri.setConnection(host, port, database, username, password, sslmode, authcfg)
 
@@ -40,7 +45,6 @@ def connection_from_name(name):
 
 
 def connection_from_uri(uri):
-
     username = uri.username() or os.environ.get('PGUSER')
     password = uri.password() or os.environ.get('PGPASSWORD')
 
@@ -51,14 +55,13 @@ def connection_from_uri(uri):
         dbname = uri.database() or os.environ.get('PGDATABASE') or username
         uri.setDatabase(dbname)
 
-    expandedConnInfo = QgsDataSourceURI(uri.uri(False)).connectionInfo(True)
+    expandedConnInfo = QgsDataSourceUri(uri.uri(False)).connectionInfo(True)
     try:
-        connection = psycopg2.connect(expandedConnInfo.encode('utf-8'))
+        connection = psycopg2.connect(expandedConnInfo)
     except Exception as e:
-        err = unicode(e)
-        uri = QgsDataSourceURI(uri.uri(False))
+        err = str(e)
+        uri = QgsDataSourceUri(uri.uri(False))
         conninfo = uri.connectionInfo(False)
-
         for i in range(3):
             (ok, username, password) = QgsCredentials.instance().get(conninfo, username, password, err)
             if not ok:
@@ -69,19 +72,18 @@ def connection_from_uri(uri):
 
             if password:
                 uri.setPassword(password)
-
             newExpandedConnInfo = uri.connectionInfo(True)
             try:
-                connection = psycopg2.connect(newExpandedConnInfo.encode('utf-8'))
+                connection = psycopg2.connect(str(newExpandedConnInfo))
                 QgsCredentials.instance().put(conninfo, username, password)
             except Exception as e:
                 if i == 2:
                     raise
 
-                err = unicode(e)
+                err = str(e)
             finally:
                 # remove certs (if any) of the expanded connectionInfo
-                expandedUri = QgsDataSourceURI(newExpandedConnInfo)
+                expandedUri = QgsDataSourceUri(newExpandedConnInfo)
 
                 sslCertFile = expandedUri.param("sslcert")
                 if sslCertFile:
@@ -99,7 +101,7 @@ def connection_from_uri(uri):
                     os.remove(sslCAFile)
     finally:
         # remove certs (if any) of the expanded connectionInfo
-        expandedUri = QgsDataSourceURI(expandedConnInfo)
+        expandedUri = QgsDataSourceUri(expandedConnInfo)
 
         sslCertFile = expandedUri.param("sslcert")
         if sslCertFile:

@@ -12,11 +12,12 @@
 
 import os
 
-from PyQt4.QtGui import *
-from PyQt4.QtCore import *
-from PyQt4 import uic
+from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtCore import *
+from qgis.PyQt import uic
+from qgis.PyQt.QtWidgets import QMessageBox, QStyledItemDelegate, QComboBox
 
-from sql_generator import SqlGenerator
+from .sql_generator import SqlGenerator
 
 this_dir = os.path.dirname(__file__)
 
@@ -195,7 +196,7 @@ class TriggerDialog(BASE, WIDGET):
         sql_gen.target_table = self.cboTargetSchema.currentText() + "." + self.cboTargetTable.currentText()
         # mapping
         sql_gen.attr_map = {}
-        for row in xrange(self.model.rowCount()):
+        for row in range(self.model.rowCount()):
             if self.model.item(row, 0).checkState() == Qt.Checked:
                 source_attr = self.model.item(row, 0).text()
                 target_attr = self.model.item(row, 1).text()
@@ -213,7 +214,7 @@ class TriggerDialog(BASE, WIDGET):
         # at least one attribute must be checked
         has_checked_item = False
         has_chosen_target_attrs = True
-        for row in xrange(self.model.rowCount()):
+        for row in range(self.model.rowCount()):
             if self.model.item(row, 0).checkState() == Qt.Checked:
                 has_checked_item = True
 
