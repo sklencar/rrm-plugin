@@ -135,7 +135,7 @@ class TriggerDialog(BASE, WIDGET):
         if sql_gen is not None:
             source_schema, source_table = sql_gen.source_table.split('.')
             source_field_names = [ field[1] for field in get_table_fields(self.conn, source_schema, source_table) ]
-            for source_attr, target_attr in sql_gen.attr_map.iteritems():
+            for source_attr, target_attr in sql_gen.attr_map.items():
                 try:
                     source_field_index = source_field_names.index(source_attr)
                 except ValueError:
