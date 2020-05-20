@@ -190,6 +190,35 @@ class ConfigDialog(BASE, WIDGET):
             return
         generators = dlg.to_sql_generator()
 
+        # Check if a trigger from generators already exists
+        self.triggers = list_triggers(conn)
+        overlapped_triggers = []
+
+        for gen in generators:
+            for trigger_id, src, trg in self.triggers:
+                # if source or target table has been deleted
+                if gen.source_table == src and gen.target_table == trg:
+                    overlapped_triggers.append((trigger_id, src, trg))
+
+        if overlapped_triggers:
+            for trigger_id, src, trg in overlapped_triggers:
+                msgBox = QMessageBox()
+                msgBox.setWindowTitle("Trigger already exists.")
+                msgBox.setText("Trigger '{}' to '{}' already exists. \nDo you want to override existing trigger?".format(src, trg))
+                msgBox.setStandardButtons(QMessageBox.Yes)
+                msgBox.addButton(QMessageBox.No)
+                msgBox.setDefaultButton(QMessageBox.No)
+                if msgBox.exec_() == QMessageBox.Yes:
+                    sql_gen = SqlGenerator()
+                    sql_gen.trg_fcn_id = trigger_id
+                    sql_gen.source_table = src
+                    sql_gen.target_table = trg
+                    sql = sql_gen.drop_sql()
+
+                    cur = conn.cursor()
+                    cur.execute("BEGIN;" + sql + "COMMIT;")
+
+        # Create trigger
         final_sql = ""
         offset = 0
         for sql_gen in generators:
